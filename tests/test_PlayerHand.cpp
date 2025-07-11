@@ -11,4 +11,7 @@ TEST(PlayerHand, FullAndEmpty) {
     hand.AddCard({ESuit::CLUBS, ERank::EIGHT});
     
     EXPECT_TRUE(hand.IsFull());
+
+    hand.Clear();
+    EXPECT_TRUE(hand.IsEmpty());
 }
