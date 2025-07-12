@@ -22,7 +22,7 @@ public:
     GameLogic(Deck& deck, Table& table, Players& players);
 
     void StartHand();
-    void PlayerMakesAction(EPlayerAction action, Coins_t bet);
+    void CurrentPlayerMakesAction(EPlayerAction action, Coins_t bet);
 
     EState GetState() const;
     std::size_t GetCurrentPlayerIndex() const;

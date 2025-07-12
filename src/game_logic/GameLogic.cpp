@@ -35,8 +35,7 @@ void GameLogic::StartHand() {
     current_player_index_ = GetNextPlayerToIndex(index_blind_big_); // UTG, under the gun.
 }
 
-void GameLogic::PlayerMakesAction(EPlayerAction action, Coins_t bet) {
-    // apuesta mínima valor ciega grande.
+void GameLogic::CurrentPlayerMakesAction(EPlayerAction action, Coins_t bet) {
     auto& player = players_[current_player_index_];
     // FOLD / CALL / RAISE (si ya hay una apuesta en la mesa)
     switch(action) {
@@ -62,6 +61,7 @@ void GameLogic::PlayerMakesAction(EPlayerAction action, Coins_t bet) {
         case EPlayerAction::FOLD:
             player.SetFold(true);
             player.GetHand().Clear();
+            player.SetCurrentBet(0.0);
             // Te retiras. Se eliminan tus cartas. Y pierdes la apuesta mínima / máxima si te toca.
             // Si nadie hubiese apostado, en vez de fold, puedes pasar.
         break;

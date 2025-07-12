@@ -28,4 +28,6 @@ TEST(GameLogic, StartHand) {
     EXPECT_EQ(players[2].GetCoins(), 25.0 - big_blind);
 
     for (auto& player : players) { EXPECT_TRUE(player.GetHand().IsFull()); }
+
+    EXPECT_EQ(logic.GetCurrentPlayerIndex(), 0);
 }
