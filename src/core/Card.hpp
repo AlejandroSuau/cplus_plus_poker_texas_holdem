@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 enum class ESuit {
     HEARTS,
     DIAMONDS,
@@ -40,6 +42,8 @@ public:
     ERank GetRank() const noexcept;
 
     bool operator==(const Card& other) const noexcept;
+
+    std::string ToString() const;
 
 private:
     ESuit suit_;

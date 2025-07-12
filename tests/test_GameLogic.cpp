@@ -8,7 +8,6 @@
 
 #include "game_logic/GameLogic.hpp"
 
-
 TEST(GameLogic, StartHand) {
     Deck deck {kCardDeck};
     Table table(kBlindSmall, kBlindBig);
