@@ -12,13 +12,13 @@
 //       Is ranges shuffle the best?
 
 Deck::Deck(Deck::DeckCards_t cards)  noexcept
-    : cards_(std::move(cards)), next_card_index_(0) {}
+    : cards_(cards), next_card_index_(0) {}
     
 void Deck::Shuffle() noexcept {
     Logger::Info("Shuffling the deck ...");
     auto seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::random_device rd;
-    std::default_random_engine rng(rd());
+    std::mt19937 rng(rd());
     std::ranges::shuffle(cards_, rng);
     next_card_index_ = 0;
 }
