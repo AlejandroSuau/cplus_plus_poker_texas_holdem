@@ -2,32 +2,114 @@
 
 #include "Config.hpp"
 
+#include "core/Types.hpp"
 #include "core/Card.hpp"
 #include "core/Deck.hpp"
 #include "core/Player.hpp"
 
 #include "game_logic/GameLogic.hpp"
 
-TEST(GameLogic, StartHand) {
-    Deck deck {kCardDeck};
-    Table table(kBlindSmall, kBlindBig);
-    Players players { {"Player 1", 50.0}, {"Player 2", 75.0}, {"Player 3", 25.0}};
+#include <memory>
 
-    for (auto& player : players) { EXPECT_TRUE(player.GetHand().IsEmpty()); }
+class GameLogicTest : public ::testing::Test {
+protected:
+    std::unique_ptr<Deck> deck_;
+    std::unique_ptr<Table> table_;
+    Players players_;
+    std::unique_ptr<GameLogic> logic_;
 
-    GameLogic logic(deck, table, players);
-    logic.StartHand();
+    void SetUp() override {
+        deck_ = std::make_unique<Deck>(kCardDeck);
+        table_ = std::make_unique<Table>(0.05, 0.10);
+        players_ = {{
+            {"P0", 10.0}, {"P1", 10.0}, {"P2", 10.0},
+            {"P3", 10.0}, {"P4", 10.0}, {"P5", 10.0}}};
+        logic_ = std::make_unique<GameLogic>(*deck_, *table_, players_);
+    }
 
-    EXPECT_EQ(logic.GetState(), EState::PREFLOP);
+    void TearDown() override {
 
-    const auto small_blind = table.GetBlindSmall();
-    const auto big_blind = table.GetBlindBig();
+    }
+
+    void StartHand() { logic_->StartHand(); }
+    void Bet(Coins_t amount) { logic_->CurrentPlayerMakesAction(EPlayerAction::BET, amount); }
+    void Raise(Coins_t amount) { logic_->CurrentPlayerMakesAction(EPlayerAction::RAISE, amount); }
+    void Check() { logic_->CurrentPlayerMakesAction(EPlayerAction::CHECK); }
+    void Call() { logic_->CurrentPlayerMakesAction(EPlayerAction::CALL); }
+    void Fold() { logic_->CurrentPlayerMakesAction(EPlayerAction::FOLD); }
+};
+
+TEST_F(GameLogicTest, StartHand) {
+    for (auto& player : players_) {
+        EXPECT_TRUE(player.GetHand().IsEmpty());
+    }
+
+    StartHand();
+
+    EXPECT_EQ(logic_->GetState(), EState::PREFLOP);
+
+    for (auto& player : players_) {
+        EXPECT_TRUE(player.GetHand().IsFull());
+    }
+
+    EXPECT_EQ(logic_->GetDealerIndex(), 0);
+    EXPECT_EQ(logic_->GetCurrentPlayerIndex(), 3);
+}
+
+TEST_F(GameLogicTest, CompleteStateBettingPreFlop) {
+    StartHand();
+
+    Bet(0.3);   // P3
+    Call();     // P4
+    Raise(1.5); // P5
+    Fold();     // P0
+    Call();     // P1
+    Call();     // P2
+    Call();     // P3
+    Call();     // P4; Making a higher bet than his previous 0.3
+
+    EXPECT_TRUE(players_[0].IsFold());
+    for (std::size_t i = 1; i < players_.size(); ++i) {
+        EXPECT_EQ(players_[i].GetCoins(), 8.5);
+    }
+
+    EXPECT_EQ(table_->GetPot(), 1.5 * 5);
+    EXPECT_EQ(logic_->GetState(), EState::PREFLOP);
+    EXPECT_TRUE(logic_->IsBettingRoundComplete());
+
+    logic_->AdvanceState();
+
+    EXPECT_EQ(logic_->GetState(), EState::FLOP);
+}
+
+TEST_F(GameLogicTest, CompleteStateBettingFlop) {
+    StartHand();
+
+    // PREFLOP
+    Bet(0.3); // P3
+    Fold();   // P4
+    Fold();   // P5
+    Fold();   // P0
+    Call();   // P1
+    Call();   // P2
+    logic_->AdvanceState();
+
+    EXPECT_EQ(logic_->GetState(), EState::FLOP);
+    EXPECT_EQ(table_->GetCommunityCards().size(), 3);
+    EXPECT_EQ(logic_->GetCurrentPlayerIndex(), 1);
+
+    // FLOP
+    Check();  // P1
+    Bet(0.5); // P2
+    Call();   // P3
+    Call();   // P1
+    logic_->AdvanceState();
     
-    EXPECT_EQ(table.GetPot(), small_blind + big_blind);
-    EXPECT_EQ(players[1].GetCoins(), 75.0 - small_blind);
-    EXPECT_EQ(players[2].GetCoins(), 25.0 - big_blind);
+    EXPECT_EQ(logic_->GetState(), EState::TURN);
+}
 
-    for (auto& player : players) { EXPECT_TRUE(player.GetHand().IsFull()); }
+TEST_F(GameLogicTest, CompleteStateBettingTurn) {
+}
 
-    EXPECT_EQ(logic.GetCurrentPlayerIndex(), 0);
+TEST_F(GameLogicTest, CompleteStateBettingRiver) {
 }

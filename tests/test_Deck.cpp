@@ -18,8 +18,10 @@ TEST(DeckTest, Draw) {
 TEST(DeckTest, Shuffle) {
     Deck::DeckCards_t deck_cards {
         {ESuit::HEARTS, ERank::TWO},
-        {ESuit::HEARTS, ERank::THREE},
-        {ESuit::HEARTS, ERank::FOUR},
+        {ESuit::SPADES, ERank::THREE},
+        {ESuit::DIAMONDS, ERank::FOUR},
+        {ESuit::DIAMONDS, ERank::FIVE},
+        {ESuit::DIAMONDS, ERank::SIX},
         {ESuit::HEARTS, ERank::ACE}
     };
     Deck deck(deck_cards);

@@ -43,6 +43,7 @@ void GameLogic::StartHand() {
 
 void GameLogic::CurrentPlayerMakesAction(EPlayerAction action, Coins_t bet) {
     auto& player = players_[current_player_index_];
+    // TODO: Validate action
     switch(action) {
         case EPlayerAction::BET:
             // Cuando nadie haya apostado (independientemente de las mínima y máxima)
@@ -85,10 +86,20 @@ std::size_t GameLogic::GetNextPlayerToIndex(std::size_t index) const {
     return ((index + 1) % players_.size());
 }
 
-void GameLogic::AdvanceTurn() {
-    current_player_index_ = GetNextPlayerToIndex(current_player_index_);
+std::size_t GameLogic::GetNextNonFoldPlayerToIndex(std::size_t index) const {
+    // TODO: We assume there is at least 1 non-fold.
+    std::size_t i = index;
+    do {
+        i = GetNextPlayerToIndex(i);
+    } while(players_[i].IsFold());
     
+    return i;
+}
+
+void GameLogic::AdvanceTurn() {
+    current_player_index_ = GetNextNonFoldPlayerToIndex(current_player_index_);
     if (IsBettingRoundComplete()) {
+        state_did_finish_ = true;
         for (auto& player : players_) {
             if (player.IsFold()) continue;
 
@@ -96,7 +107,6 @@ void GameLogic::AdvanceTurn() {
             table_.IncreasePot(player_last_bet);
             player.DecreaseCoins(player_last_bet);
         }
-        state_did_finish_ = true;
     }
 }
 
@@ -123,8 +133,12 @@ void GameLogic::AdvanceState() {
 }
 
 void GameLogic::EnteringStateFlop() {
+    // TODO: Reset players last bet?
+    state_did_finish_ = false;
     state_ = EState::FLOP;
-    
+    highest_bet_ = 0.0;
+    last_raise_amount_ = 0.0;
+
     // 1. Player turn in small position index.
     current_player_index_ = index_blind_small_;
     while (players_[current_player_index_].IsFold()) {
@@ -138,6 +152,8 @@ void GameLogic::EnteringStateFlop() {
 }
 
 void GameLogic::EnteringStateTurn() {
+    // TODO: Reset players last bet?
+    state_did_finish_ = false;
     state_ = EState::TURN;
     current_player_index_ = index_blind_small_;
     // 1. Actua la ciega pequeña.
@@ -145,12 +161,15 @@ void GameLogic::EnteringStateTurn() {
 }
 
 void GameLogic::EnteringStateRiver() {
+    // TODO: Reset players last bet?
+    state_did_finish_ = false;
     state_ = EState::RIVER;
     // 1. Actua la ciega pequeña.
     // 2. Draw community card.
 }
 
 void GameLogic::EnteringStateShowdown() {
+    state_did_finish_ = false;
     state_ = EState::SHOWDOWN;
 
     // 1. Show private cards.

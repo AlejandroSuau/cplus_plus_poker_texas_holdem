@@ -39,3 +39,7 @@ Coins_t Table::GetBlindSmall() const {
 Coins_t Table::GetBlindBig() const {
     return blind_big_;
 }
+
+const std::vector<Card>& Table::GetCommunityCards() const noexcept {
+    return community_cards_;
+}

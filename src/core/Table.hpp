@@ -21,6 +21,8 @@ public:
     Coins_t GetBlindSmall() const;
     Coins_t GetBlindBig() const;
 
+    const std::vector<Card>& GetCommunityCards() const noexcept;
+
 private:
     Coins_t pot_;
     Coins_t blind_big_;

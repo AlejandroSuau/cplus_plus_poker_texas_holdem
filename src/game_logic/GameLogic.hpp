@@ -46,6 +46,7 @@ private:
     Coins_t last_raise_amount_ {0.0};
 
     std::size_t GetNextPlayerToIndex(std::size_t index) const;
+    std::size_t GetNextNonFoldPlayerToIndex(std::size_t index) const; // Non-fold one.
 
     void AdvanceTurn();
 
