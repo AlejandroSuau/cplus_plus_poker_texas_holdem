@@ -3,18 +3,18 @@
 #include <cassert>
 
 Player::Player(std::string name, Coins_t coins) noexcept
-    : name_(name), hand_(), coins_(coins), current_bet_(0), is_fold_(false) {}
+    : name_(name), hand_(), coins_(coins), last_bet_(0.0), is_fold_(false) {}
 
 PlayerHand& Player::GetHand() noexcept {
     return hand_;
 }
 
-Coins_t Player::GetCurrentBet() const noexcept {
-    return current_bet_;
+Coins_t Player::GetLastBet() const noexcept {
+    return last_bet_;
 }
 
-void Player::SetCurrentBet(Coins_t bet) noexcept {
-    current_bet_ = bet;
+void Player::SetLastBet(Coins_t bet) noexcept {
+    last_bet_ = bet;
 }
 
 void Player::SetCoins(Coins_t coins) noexcept {
