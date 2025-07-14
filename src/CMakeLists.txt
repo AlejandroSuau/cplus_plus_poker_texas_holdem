@@ -11,7 +11,9 @@ target_include_directories(pokerlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Executable for main game (with Raylib)
 add_executable(poker_main main.cpp)
-target_link_libraries(pokerlib PUBLIC raylib)
+
+target_link_libraries(pokerlib PUBLIC raylib pheval)
+# target_link_libraries(pokerlib PUBLIC pheval)
 target_link_libraries(poker_main PRIVATE pokerlib)
 
 # Checks if OSX and links appropriate frameworks (Only required on MacOS)

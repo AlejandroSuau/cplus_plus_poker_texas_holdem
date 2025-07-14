@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <phevaluator/phevaluator.h>
+
 #include "Config.hpp"
 
 #include "core/Types.hpp"
@@ -109,6 +111,13 @@ TEST_F(GameLogicTest, CompleteStateBettingFlop) {
 }
 
 TEST_F(GameLogicTest, CompleteStateBettingTurn) {
+    StartHand();
+
+    phevaluator::Rank a = phevaluator::EvaluateCards("9c", "4c", "4s", "9d", "4h");
+    phevaluator::Rank b = phevaluator::EvaluateCards("9c", "4c", "4s", "9d", "9h");
+
+    ASSERT_EQ(a.value(), 292);
+    ASSERT_EQ(b.value(), 236);
 }
 
 TEST_F(GameLogicTest, CompleteStateBettingRiver) {
