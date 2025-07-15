@@ -1,31 +1,32 @@
 #pragma once
 
+#include "core/ITable.hpp"
 #include "core/Types.hpp"
 #include "core/PlayerList.hpp"
 #include "core/Deck.hpp"
 
 // TODO: ALL-IN + Side pots
 
-class Table {
+class Table : public ITable {
 public:
-    Table();
-    Table(Coins_t blind_small, Coins_t blind_big);
+    Table() noexcept = default;
+    Table(Coins_t blind_small, Coins_t blind_big) noexcept;
 
-    void SetBlindSmall(Coins_t cost);
-    void SetBlindBig(Coins_t cost);
-    void AddCommunityCard(Card card);
-    void IncreasePot(Coins_t value);
-    Coins_t ConsumePot();
+    void SetBlindSmall(Coins_t cost) noexcept override;
+    void SetBlindBig(Coins_t cost) noexcept override;
+    [[nodiscard]] Coins_t GetBlindSmall() const noexcept override;
+    [[nodiscard]] Coins_t GetBlindBig() const noexcept override;
     
-    Coins_t GetPot() const;
-    Coins_t GetBlindSmall() const;
-    Coins_t GetBlindBig() const;
+     void IncreasePot(Coins_t amount) noexcept override;
+    [[nodiscard]] Coins_t CollectPot() noexcept override;
+    [[nodiscard]] Coins_t GetPot() const noexcept override;
 
-    const std::vector<Card>& GetCommunityCards() const noexcept;
+     void AddCommunityCard(Card card) noexcept override;
+    [[nodiscard]] const CommunityCards_t& GetCommunityCards() const noexcept override;
 
 private:
-    Coins_t pot_;
-    Coins_t blind_big_;
-    Coins_t blind_small_;
-    std::vector<Card> community_cards_;
+    Coins_t pot_{0.0};
+    Coins_t blind_big_{0.0};
+    Coins_t blind_small_{0.0};
+    CommunityCards_t community_cards_;
 };

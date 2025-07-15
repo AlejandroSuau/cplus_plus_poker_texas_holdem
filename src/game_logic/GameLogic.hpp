@@ -1,8 +1,13 @@
 #pragma once
 
+#include <phevaluator/phevaluator.h>
+
 #include "core/Types.hpp"
 #include "core/Deck.hpp"
+#include "core/Player.hpp"
 #include "core/Table.hpp"
+
+#include <optional>
 
 enum class EState {
     NONE,
@@ -10,7 +15,8 @@ enum class EState {
     FLOP,
     TURN,
     RIVER,
-    SHOWDOWN
+    SHOWDOWN,
+    HAND_FINISHED
 };
 
 // TODO: Action + Bet on struct.
@@ -19,6 +25,12 @@ using Players = std::vector<Player>;
 
 class GameLogic {
 public:
+    struct Winner {
+        Player* player;
+        phevaluator::Rank rank_;
+        Coins_t pot_amount_;
+    };
+
     GameLogic(Deck& deck, Table& table, Players& players);
 
     void StartHand();
@@ -30,6 +42,8 @@ public:
     std::size_t GetDealerIndex() const;
     Coins_t GetHighestBet() const;
     bool IsBettingRoundComplete() const;
+
+    std::optional<Winner> GetWinner() const;
 
 private:
     Deck& deck_;
@@ -44,7 +58,8 @@ private:
     std::size_t current_player_index_ {0};
     Coins_t highest_bet_ {0.0};
     Coins_t last_raise_amount_ {0.0};
-
+    std::optional<Winner> winner_{std::nullopt};
+    
     std::size_t GetNextPlayerToIndex(std::size_t index) const;
     std::size_t GetNextNonFoldPlayerToIndex(std::size_t index) const; // Non-fold one.
 
@@ -54,4 +69,8 @@ private:
     void EnteringStateTurn();
     void EnteringStateRiver();
     void EnteringStateShowdown();
+    void EnteringStateHandFinished();
+
+    std::size_t BestRankFromPlayerTableCards() const;
+    void PrintAllPlayersRanks() const;
 };

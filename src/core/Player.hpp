@@ -7,6 +7,7 @@
 
 #include <string>
 #include <array>
+#include <string_view>
 
 enum class EPlayerAction {
     FOLD,
@@ -20,8 +21,10 @@ class Player {
 public:
     Player(std::string name, Coins_t coins) noexcept;
     PlayerHand& GetHand() noexcept;
+    const PlayerHand& GetHand() const noexcept;
     Coins_t GetCoins() noexcept;
     Coins_t GetLastBet() const noexcept;
+    std::string_view GetName() const noexcept;
     void SetCoins(Coins_t coins) noexcept;
     void SetLastBet(Coins_t bet) noexcept;
     void SetFold(bool is_fold) noexcept;

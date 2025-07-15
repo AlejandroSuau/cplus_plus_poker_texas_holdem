@@ -1,42 +1,39 @@
 #include "core/Table.hpp"
 
-Table::Table()
-    : pot_(0), blind_small_(0), blind_big_(0) {}
+Table::Table(Coins_t blind_small, Coins_t blind_big) noexcept
+    : pot_(0.0), blind_small_(blind_small), blind_big_(blind_big) {}
 
-Table::Table(Coins_t blind_small, Coins_t blind_big)
-    : pot_(0), blind_small_(blind_small), blind_big_(blind_big) {}
-
-void Table::SetBlindSmall(Coins_t cost) {
+void Table::SetBlindSmall(Coins_t cost) noexcept {
     blind_small_ = cost;
 }
 
-void Table::SetBlindBig(Coins_t cost) {
+void Table::SetBlindBig(Coins_t cost) noexcept {
     blind_big_ = cost;
 }
 
-Coins_t Table::ConsumePot() {
+Coins_t Table::CollectPot() noexcept {
     auto pot = pot_;
     pot_ = 0;
     return pot;
 }
 
-void Table::IncreasePot(Coins_t value) {
+void Table::IncreasePot(Coins_t value) noexcept {
     pot_ += value;
 }
 
-void Table::AddCommunityCard(Card card) {
+void Table::AddCommunityCard(Card card) noexcept {
     community_cards_.push_back(card);
 }
 
-Coins_t Table::GetPot() const {
+Coins_t Table::GetPot() const noexcept {
     return pot_;
 }
 
-Coins_t Table::GetBlindSmall() const {
+Coins_t Table::GetBlindSmall() const noexcept {
     return blind_small_;
 }
 
-Coins_t Table::GetBlindBig() const {
+Coins_t Table::GetBlindBig() const noexcept {
     return blind_big_;
 }
 

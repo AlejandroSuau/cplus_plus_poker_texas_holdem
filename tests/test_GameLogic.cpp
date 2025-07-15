@@ -11,6 +11,9 @@
 
 #include "game_logic/GameLogic.hpp"
 
+#include "utils/Translator.hpp"
+#include "utils/Logger.hpp"
+
 #include <memory>
 
 class GameLogicTest : public ::testing::Test {
@@ -113,12 +116,127 @@ TEST_F(GameLogicTest, CompleteStateBettingFlop) {
 TEST_F(GameLogicTest, CompleteStateBettingTurn) {
     StartHand();
 
-    phevaluator::Rank a = phevaluator::EvaluateCards("9c", "4c", "4s", "9d", "4h");
-    phevaluator::Rank b = phevaluator::EvaluateCards("9c", "4c", "4s", "9d", "9h");
+    // PREFLOP
+    Bet(0.5);   // P3
+    Call();     // P4
+    Call();     // P5
+    Call();     // P0
+    Call();     // P1
+    Call();     // P2
+    logic_->AdvanceState();
 
-    ASSERT_EQ(a.value(), 292);
-    ASSERT_EQ(b.value(), 236);
+    // FLOP
+    Fold();     // P0
+    Fold();     // P1
+    Fold();     // P2
+    Bet(0.45);  // P3
+    Call();     // P4
+    Call();     // P5
+    logic_->AdvanceState();
+
+    EXPECT_EQ(logic_->GetState(), EState::TURN);
+    EXPECT_EQ(table_->GetCommunityCards().size(), 4);
+
+    // TURN
+    Bet(0.45);  // P3
+    Call();     // P4
+    Call();     // P5
+    logic_->AdvanceState();
+
+    EXPECT_EQ(logic_->GetState(), EState::RIVER);
+    EXPECT_EQ(table_->GetCommunityCards().size(), 5);
 }
 
 TEST_F(GameLogicTest, CompleteStateBettingRiver) {
+    StartHand();
+
+    // PREFLOP
+    Bet(0.5);   // P3 
+    Fold();     // P4
+    Fold();     // P5
+    Fold();     // P0
+    Fold();     // P1
+    Call();     // P2
+    logic_->AdvanceState();
+
+    // FLOP
+    Bet(0.3);     // P2
+    Call();       // P3
+    logic_->AdvanceState();
+
+    // TURN
+    Bet(0.3);     // P2
+    Call();       // P3
+    logic_->AdvanceState();
+
+    // RIVER
+    Bet(0.3);     // P2
+    Call();       // P3
+    // Set p1 card.
+    // Set p2 card.
+    // Set table cards.
+    
+    logic_->AdvanceState();
+    EXPECT_EQ(logic_->GetState(), EState::SHOWDOWN);
+    
+    // Check winner.
+
+    // Swap Cards, check winner p1.
+    // check pot given
+    // check pot empty
+}
+
+TEST_F(GameLogicTest, FinishHand) {
+    StartHand();
+
+    const auto p2_coins = players_[2].GetCoins();
+
+    // PREFLOP
+    Bet(0.3);   // P3 +0.3
+    Fold();     // P4 -
+    Fold();     // P5 -
+    Fold();     // P0 -
+    Fold();     // P1 +0.05
+    Call();     // P2 +0.3
+    logic_->AdvanceState();
+
+    // FLOP
+    Bet(0.3);     // P2 +0.3
+    Call();       // P3 +0.3
+    logic_->AdvanceState();
+
+    // TURN
+    Bet(0.3);     // P2 +0.3
+    Call();       // P3 +0.3
+    logic_->AdvanceState();
+
+    // RIVER
+    Bet(0.3);     // P2 +0.3
+    Fold();       // P3
+
+    EXPECT_FALSE(logic_->GetWinner().has_value());
+
+    logic_->AdvanceState();
+    
+    const auto pot_amount = table_->GetPot();
+
+    // SHOWDOWN state; We have a winner.
+    EXPECT_EQ(logic_->GetState(), EState::SHOWDOWN);
+    EXPECT_TRUE(logic_->GetWinner().has_value());
+    
+    const Coins_t expected_pot = (0.3 + 0.05 + 0.3) + (0.6) + (0.6) + 0.3;
+    auto winner = logic_->GetWinner();
+    EXPECT_EQ(winner->pot_amount_, pot_amount);
+    EXPECT_EQ(winner->player->GetName(), players_[2].GetName().data());
+    EXPECT_NEAR(pot_amount, expected_pot, 0.001);
+
+    // Hand Finished and pot collected.
+    logic_->AdvanceState();
+    EXPECT_EQ(logic_->GetState(), EState::HAND_FINISHED);
+    EXPECT_EQ(table_->GetPot(), 0.0);
+
+    const Coins_t all_hand_bets = 0.3 * 4;
+    const Coins_t expected_player_coins = p2_coins - all_hand_bets + pot_amount;
+    Logger::Info("coins {}, bets {}, pot {}", p2_coins, all_hand_bets, pot_amount);
+    EXPECT_NEAR(winner->player->GetCoins(), expected_player_coins, 0.001);
 }

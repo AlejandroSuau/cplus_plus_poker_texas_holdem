@@ -26,8 +26,8 @@ bool Card::operator==(const Card& other) const noexcept {
 
 std::string Card::ToString() const {
     std::ostringstream oss;
-    oss << "{Card"
-        << EnumString::ToString(rank_) << " of "
+    oss << "Card {"
+        << EnumString::ToString(rank_) << "-"
         << EnumString::ToString(suit_) << "}";
     return oss.str();
 }

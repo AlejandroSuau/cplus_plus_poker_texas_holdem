@@ -1,9 +1,12 @@
 #include "game_logic/GameLogic.hpp"
 
+#include <phevaluator/phevaluator.h>
+
+#include "utils/Translator.hpp"
+#include "utils/Logger.hpp"
+
 #include <cassert>
 #include <algorithm>
-
-#include "utils/Logger.hpp"
 
 GameLogic::GameLogic(Deck& deck, Table& table, Players& players) 
     : deck_(deck), table_(table), players_(players), state_(EState::NONE), dealer_index_(players_.size() - 1) {}
@@ -39,6 +42,7 @@ void GameLogic::StartHand() {
     current_player_index_ = GetNextPlayerToIndex(index_blind_big_);
     state_ = EState::PREFLOP;
     state_did_finish_ = false;
+    winner_ = std::nullopt;
 }
 
 void GameLogic::CurrentPlayerMakesAction(EPlayerAction action, Coins_t bet) {
@@ -129,6 +133,9 @@ void GameLogic::AdvanceState() {
         case EState::RIVER:
             EnteringStateShowdown();
         break;
+        case EState::SHOWDOWN:
+            EnteringStateHandFinished();
+        break;
     }
 }
 
@@ -138,6 +145,9 @@ void GameLogic::EnteringStateFlop() {
     state_ = EState::FLOP;
     highest_bet_ = 0.0;
     last_raise_amount_ = 0.0;
+    for (auto& p : players_) {
+        p.SetLastBet(0.0);
+    }
 
     // 1. Player turn in small position index.
     current_player_index_ = index_blind_small_;
@@ -156,26 +166,74 @@ void GameLogic::EnteringStateTurn() {
     state_did_finish_ = false;
     state_ = EState::TURN;
     current_player_index_ = index_blind_small_;
-    // 1. Actua la ciega pequeña.
-    // 2. Draw community card.
+    for (auto& p : players_) {
+        p.SetLastBet(0.0);
+    }
+
+    while (players_[current_player_index_].IsFold()) {
+        current_player_index_ = GetNextPlayerToIndex(current_player_index_);
+    }
+    
+    table_.AddCommunityCard(deck_.Draw());
 }
 
 void GameLogic::EnteringStateRiver() {
-    // TODO: Reset players last bet?
     state_did_finish_ = false;
     state_ = EState::RIVER;
-    // 1. Actua la ciega pequeña.
-    // 2. Draw community card.
+    current_player_index_ = index_blind_small_;
+    for (auto& p : players_) {
+        p.SetLastBet(0.0);
+    }
+    while (players_[current_player_index_].IsFold()) {
+        current_player_index_ = GetNextPlayerToIndex(current_player_index_);
+    }
+    
+     table_.AddCommunityCard(deck_.Draw());
 }
 
 void GameLogic::EnteringStateShowdown() {
-    state_did_finish_ = false;
     state_ = EState::SHOWDOWN;
 
-    // 1. Show private cards.
-    // 2. Evaluate hand.
-    // 3. Give the prize.
+    // Check who wins
+    auto best_player_index = BestRankFromPlayerTableCards();
+    auto& pcards = players_[best_player_index].GetHand().GetCards();
+    auto& tcards = table_.GetCommunityCards();
+    const auto rank = Translator::RankFromPlayerTableCards(pcards, tcards);
+    Logger::Info("... ... ... ...");
+    Logger::Info("Player {} wins with {}", best_player_index, rank.describeCategory());
+    Logger::Info("... ... ... ...");
 
+    winner_ = Winner{&players_[best_player_index], rank, table_.GetPot()};
+    state_did_finish_ = true;
+}
+
+void GameLogic::EnteringStateHandFinished() {
+    assert(winner_->player && "No winner player set");
+    state_ = EState::HAND_FINISHED;
+    
+    const Coins_t pot_amount = table_.CollectPot();
+    winner_->player->IncreaseCoins(pot_amount);
+    state_did_finish_ = true;
+    // Restart Game?
+}
+
+std::size_t GameLogic::BestRankFromPlayerTableCards() const {
+    std::size_t best_index = 0;
+    phevaluator::Rank best_rank;
+    for (std::size_t i = 0; i < players_.size(); ++i) {
+        if (players_[i].IsFold()) continue;
+
+        const auto rank = Translator::RankFromPlayerTableCards(
+            players_[i].GetHand().GetCards(), table_.GetCommunityCards());
+        if (best_rank == 0 || rank > best_rank) {
+            best_index = i;
+            best_rank = rank;
+        }
+    }
+
+    assert(best_rank != 0 && "There must be a best rank");
+
+    return best_index;
 }
 
 bool GameLogic::IsBettingRoundComplete() const {
@@ -185,6 +243,22 @@ bool GameLogic::IsBettingRoundComplete() const {
         [&](const Player& p) { return (p.IsFold() || p.GetLastBet() == highest_bet_); }
     );
 }
+
+void GameLogic::PrintAllPlayersRanks() const {
+    for (std::size_t i = 0; i < players_.size(); ++i) {
+        if (players_[i].IsFold()) continue;
+
+        auto& pcards = players_[i].GetHand().GetCards();
+        auto& tcards = table_.GetCommunityCards();
+        const auto rank = Translator::RankFromPlayerTableCards(pcards, tcards);
+
+        Logger::Info("... Cards ...");
+        for (auto& c : pcards) { Logger::Info("{}", c.ToString()); }
+        for (auto& c : tcards) { Logger::Info("{}", c.ToString()); }
+        Logger::Info("RANK {}", rank.describeCategory());
+        Logger::Info("... ... ... ...");
+    }
+} 
 
 Coins_t GameLogic::GetHighestBet() const {
     return highest_bet_;
@@ -200,4 +274,8 @@ std::size_t GameLogic::GetDealerIndex() const {
 
 EState GameLogic::GetState() const {
     return state_;
+}
+
+std::optional<GameLogic::Winner> GameLogic::GetWinner() const {
+    return winner_;
 }

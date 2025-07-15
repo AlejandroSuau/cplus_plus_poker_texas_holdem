@@ -5,7 +5,15 @@
 Player::Player(std::string name, Coins_t coins) noexcept
     : name_(name), hand_(), coins_(coins), last_bet_(0.0), is_fold_(false) {}
 
+std::string_view Player::GetName() const noexcept {
+    return name_;
+}
+
 PlayerHand& Player::GetHand() noexcept {
+    return hand_;
+}
+
+const PlayerHand& Player::GetHand() const noexcept {
     return hand_;
 }
 

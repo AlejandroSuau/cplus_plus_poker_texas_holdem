@@ -5,8 +5,8 @@
 enum class ESuit {
     HEARTS,
     DIAMONDS,
-    CLUBS,
-    SPADES
+    CLUBS, // trebol
+    SPADES // picas
 };
 
 enum class ERank {
