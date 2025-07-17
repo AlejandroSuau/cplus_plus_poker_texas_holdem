@@ -21,8 +21,8 @@ public:
 
 TEST(DeckTest, DrawsSequentiallyWithoutShuffle) {
     std::vector<Card> cards = {
-        {ESuit::HEARTS, ERank::TWO},
-        {ESuit::SPADES, ERank::THREE}
+        {ECardSuit::HEARTS, ECardRank::TWO},
+        {ECardSuit::SPADES, ECardRank::THREE}
     };
     MockRandomProvider mock_rng;
     Deck deck(cards, mock_rng);
@@ -41,8 +41,8 @@ TEST(DeckTest, DrawsSequentiallyWithoutShuffle) {
 
 TEST(DeckTest, ShuffleCallsRandomProvider) {
     std::vector<Card> cards = {
-        {ESuit::HEARTS, ERank::TWO},
-        {ESuit::SPADES, ERank::THREE}
+        {ECardSuit::HEARTS, ECardRank::TWO},
+        {ECardSuit::SPADES, ECardRank::THREE}
     };
     ReverseMockRandomProvider reverse_rng;
 
@@ -60,8 +60,8 @@ TEST(DeckTest, ShuffleCallsRandomProvider) {
 
 TEST(DeckTest, GetCardsReflectsCurrentDeckState) {
     std::vector<Card> cards = {
-        {ESuit::HEARTS, ERank::TWO},
-        {ESuit::SPADES, ERank::THREE}
+        {ECardSuit::HEARTS, ECardRank::TWO},
+        {ECardSuit::SPADES, ECardRank::THREE}
     };
     MockRandomProvider mock_rng;
     Deck deck(cards, mock_rng);
@@ -73,9 +73,9 @@ TEST(DeckTest, GetCardsReflectsCurrentDeckState) {
 
 TEST(DeckTest, ShuffleAfterPartialDraw) {
     std::vector<Card> cards = {
-        {ESuit::HEARTS, ERank::TWO},
-        {ESuit::SPADES, ERank::THREE},
-        {ESuit::DIAMONDS, ERank::FOUR}
+        {ECardSuit::HEARTS, ECardRank::TWO},
+        {ECardSuit::SPADES, ECardRank::THREE},
+        {ECardSuit::DIAMONDS, ECardRank::FOUR}
     };
     MockRandomProvider mock_rng;
     Deck deck(cards, mock_rng);

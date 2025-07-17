@@ -3,7 +3,7 @@
 #include <phevaluator/phevaluator.h>
 
 #include "core/Card.hpp"
-#include "core/PlayerHand.hpp"
+#include "table/PlayerSession.hpp"
 
 #include <string>
 #include <cassert>
@@ -18,33 +18,33 @@ namespace Translator
 inline std::string FromCustomCardToPhevaluatorCard(const Card& card) {
     std::string card_name{};
     switch(card.GetRank()) {
-        case ERank::TWO:    card_name += "2"; break;
-        case ERank::THREE:  card_name += "3"; break;
-        case ERank::FOUR:   card_name += "4"; break;
-        case ERank::FIVE:   card_name += "5"; break;
-        case ERank::SIX:    card_name += "6"; break;
-        case ERank::SEVEN:  card_name += "7"; break;
-        case ERank::EIGHT:  card_name += "8"; break;
-        case ERank::NINE:   card_name += "9"; break;
-        case ERank::TEN:    card_name += "T"; break;
-        case ERank::JACK:   card_name += "J"; break;
-        case ERank::QUEEN:  card_name += "Q"; break;
-        case ERank::KING:   card_name += "K"; break;
-        case ERank::ACE:    card_name += "A"; break;
+        case ECardRank::TWO:    card_name += "2"; break;
+        case ECardRank::THREE:  card_name += "3"; break;
+        case ECardRank::FOUR:   card_name += "4"; break;
+        case ECardRank::FIVE:   card_name += "5"; break;
+        case ECardRank::SIX:    card_name += "6"; break;
+        case ECardRank::SEVEN:  card_name += "7"; break;
+        case ECardRank::EIGHT:  card_name += "8"; break;
+        case ECardRank::NINE:   card_name += "9"; break;
+        case ECardRank::TEN:    card_name += "T"; break;
+        case ECardRank::JACK:   card_name += "J"; break;
+        case ECardRank::QUEEN:  card_name += "Q"; break;
+        case ECardRank::KING:   card_name += "K"; break;
+        case ECardRank::ACE:    card_name += "A"; break;
     }
 
     switch(card.GetSuit()) {
-        case ESuit::CLUBS:      card_name += "C"; break;
-        case ESuit::DIAMONDS:   card_name += "D"; break;
-        case ESuit::HEARTS:     card_name += "H"; break;
-        case ESuit::SPADES:     card_name += "S"; break;
+        case ECardSuit::CLUBS:      card_name += "C"; break;
+        case ECardSuit::DIAMONDS:   card_name += "D"; break;
+        case ECardSuit::HEARTS:     card_name += "H"; break;
+        case ECardSuit::SPADES:     card_name += "S"; break;
     }
     
     return card_name;
 }
 
 inline phevaluator::Rank RankFromPlayerTableCards(
-    const PlayerHand::Cards_t& player_cards, const std::vector<Card>& community_cards) {
+    const PlayerSession::Hand_t& player_cards, const std::vector<Card>& community_cards) {
     switch(community_cards.size()) {
         case 3: 
             return phevaluator::EvaluateCards(

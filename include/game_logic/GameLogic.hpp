@@ -6,23 +6,19 @@
 #include "core/IDeck.hpp"
 #include "core/Player.hpp"
 
+
+#include "table/PlayerList.hpp"
+#include "table/PlayerSession.hpp"
 #include "table/ITable.hpp"
 
 #include "utils/random/IRandomProvider.hpp"
 
 #include <optional>
 
-enum class EState {
-    NONE,
-    PREFLOP,
-    FLOP,
-    TURN,
-    RIVER,
-    SHOWDOWN,
-    HAND_FINISHED
+struct Seat {
+    std::optional<Player> player {std::nullopt};
+    PlayerSession session;
 };
-
-using Players = std::vector<Player>;
 
 struct Action {
     EPlayerAction action;
@@ -37,28 +33,25 @@ struct Winner {
 
 class GameLogic {
 public:
-    GameLogic(IDeck& deck, ITable& table, Players& players);
+    static const std::size_t kMaxPlayers = 10;
+    GameLogic(IDeck& deck, ITable& table, PlayerList& player_list);
 
     void StartHand();
     void ProcessPlayerAction(const Action& action);
     void AdvanceState();
     bool IsBettingRoundComplete() const;
 
-    EState GetState() const noexcept;
+    ELogicState GetState() const noexcept;
     std::optional<Winner> GetWinner() const noexcept;
     std::size_t GetDealerIndex() const noexcept;
     std::size_t GetCurrentPlayerIndex() const noexcept;
-    const Players& GetPlayers() const noexcept;
-
-    std::size_t FindOnlyActivePlayer() const;
-    std::size_t CountActivePlayers() const;
 
 private:
     IDeck& deck_;
     ITable& table_;
-    Players& players_;
+    PlayerList& player_list_;
 
-    EState state_ {EState::NONE};
+    ELogicState state_ {ELogicState::NONE};
     bool round_finished_{false};
 
     std::size_t dealer_index_{0};
@@ -70,9 +63,6 @@ private:
     Coins_t last_raise_{0.0};
 
     std::optional<Winner> winner_{std::nullopt};
-    
-    std::size_t NextPlayerIndex(std::size_t index) const;
-    std::size_t NextActivePlayerIndex(std::size_t index) const;
 
     void AdvanceTurn();
     void DealFlop();
@@ -84,6 +74,6 @@ private:
     void ResetBets();
     
     std::size_t FindBestPlayer() const;
-    void PayToPot(Player& player, Coins_t amount);
+    void PayToPot(PlayerList::Seat& seat, Coins_t amount);
     void DrawCommunityCards(std::size_t quantity = 1);
 };

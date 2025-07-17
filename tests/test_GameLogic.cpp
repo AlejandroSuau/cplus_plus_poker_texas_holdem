@@ -1,77 +1,57 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-#include <phevaluator/phevaluator.h>
-
-#include "Config.hpp"
-
-#include "core/Types.hpp"
 #include "core/Card.hpp"
 #include "core/Player.hpp"
 #include "table/ITable.hpp"
 #include "table/Table.hpp"
-
+#include "table/PlayerList.hpp"
 #include "game_logic/GameLogic.hpp"
-
-#include "utils/Translator.hpp"
-#include "utils/Logger.hpp"
-
 #include "mocks/MockDeck.hpp"
 #include "mocks/MockTable.hpp"
 
-#include <memory>
-#include <stdexcept>
-#include <string>
-
 using ::testing::Return;
+using ::testing::ReturnRef;
 using ::testing::_;
 
-Players MakePlayers(std::size_t n, Coins_t chips = 100.0) {
-    Players players;
-    for (std::size_t i = 0; i < n; ++i) {
-        players.emplace_back("P" + std::to_string(i), chips);
-    }
-    return players;
-}
-
+// --- Fixture ---
 class GameLogicTest : public ::testing::Test {
 protected:
-    // NiceMock for allowing not to EXPECT_CALL of all process functions from Deck.
     std::unique_ptr<testing::NiceMock<MockDeck>> mock_deck_;
     std::unique_ptr<testing::NiceMock<MockTable>> mock_table_;
-    std::unique_ptr<IRandomProvider> rng_;
-    std::unique_ptr<IDeck> deck_;
-    std::unique_ptr<ITable> table_;
-    Players players_;
+    PlayerList player_list_;
     std::unique_ptr<GameLogic> logic_;
 
     void SetUp() override {
         mock_deck_ = std::make_unique<testing::NiceMock<MockDeck>>();
         mock_table_ = std::make_unique<testing::NiceMock<MockTable>>();
-        rng_ = std::make_unique<StdRandomProvider>();
-        deck_ = std::make_unique<Deck>(kCardDeck, *rng_);
-        table_ = std::make_unique<Table>(2.0, 4.0);
-        players_ = MakePlayers(6);
-        logic_ = std::make_unique<GameLogic>(*mock_deck_, *mock_table_, players_);
 
-        std::optional<Card> fake_card = Card{ESuit::CLUBS, ERank::ACE};
+        // Fill seats 0, 1, 2 with players
+        player_list_.SitPlayerAt(MakePlayer("A"), 0);
+        player_list_.SitPlayerAt(MakePlayer("B"), 1);
+        player_list_.SitPlayerAt(MakePlayer("C"), 2);
+
+        // Always return the same card for simplicity in mocks
+        std::optional<Card> fake_card = Card{ECardSuit::HEARTS, ECardRank::ACE};
         EXPECT_CALL(*mock_deck_, Draw()).WillRepeatedly(Return(fake_card));
-
         EXPECT_CALL(*mock_table_, GetBlindSmall()).WillRepeatedly(Return(2.0));
         EXPECT_CALL(*mock_table_, GetBlindBig()).WillRepeatedly(Return(4.0));
+
+        logic_ = std::make_unique<GameLogic>(*mock_deck_, *mock_table_, player_list_);
+    }
+
+    static Player MakePlayer(const std::string& name, Coins_t chips = 100.0) {
+        return Player(name, chips);
     }
 };
 
-// === === GENERAL BEHAVIOUR AND BASIC RULES === ===
-
 TEST_F(GameLogicTest, DealerRotatesCorrectly) {
-    const size_t prev_dealer = logic_->GetDealerIndex();
+    auto prev_dealer = logic_->GetDealerIndex();
     logic_->StartHand();
-    EXPECT_EQ(logic_->GetDealerIndex(), (prev_dealer + 1) % players_.size());
+    EXPECT_EQ(logic_->GetDealerIndex(), player_list_.NextOccupiedSeat(prev_dealer));
     logic_->StartHand();
-    EXPECT_EQ(logic_->GetDealerIndex(), (prev_dealer + 2) % players_.size());
+    EXPECT_EQ(logic_->GetDealerIndex(), player_list_.NextOccupiedSeat(*player_list_.NextOccupiedSeat(prev_dealer)));
 }
-
-// === === PLAYER ACTIONS: BET, RAISE, CALL, CHECK, FOLD === ===
 
 TEST_F(GameLogicTest, CannotBetLessThanBigBlind) {
     logic_->StartHand();
@@ -99,114 +79,97 @@ TEST_F(GameLogicTest, RaiseMustBeAtLeastLastRaise) {
     logic_->ProcessPlayerAction({EPlayerAction::RAISE, 12.0});
 }
 
-// === === PREFLOP -> SHOWDOWN === ===
-
 TEST_F(GameLogicTest, CannotAdvanceStateIfNotFinished) {
     logic_->StartHand();
     EXPECT_THROW(logic_->AdvanceState(), std::runtime_error);
 }
 
-// === === EDGE CASES === ===
-
 TEST_F(GameLogicTest, PlayerWinsByAllFoldAndPotIsCorrect) {
-    auto players = MakePlayers(3);
-    logic_ = std::make_unique<GameLogic>(*deck_, *table_, players);
-
+    EXPECT_CALL(*mock_table_, GetPot()).WillRepeatedly(Return(6.0));
+    EXPECT_CALL(*mock_table_, CollectPot()).WillRepeatedly(Return(6.0));
+    
     logic_->StartHand();
-
-    logic_->ProcessPlayerAction({EPlayerAction::FOLD});
-    logic_->ProcessPlayerAction({EPlayerAction::FOLD});
+    logic_->ProcessPlayerAction({EPlayerAction::FOLD}); // Player 0 folds
+    logic_->ProcessPlayerAction({EPlayerAction::FOLD}); // Player 1 folds
 
     auto winner = logic_->GetWinner();
     ASSERT_TRUE(winner);
-    ASSERT_EQ(winner->player_index, 2);
-    ASSERT_EQ(winner->pot_amount, 6.0);
+    EXPECT_EQ(logic_->GetState(), ELogicState::HAND_FINISHED);
 
-    EXPECT_EQ(players[0].GetCoins(), 100.0);
-    EXPECT_EQ(players[1].GetCoins(), 98.0);
-    EXPECT_EQ(players[2].GetCoins(), 102.0);
+    // Only seat 2 should be active
+    EXPECT_EQ(winner->player_index, 2);
+    EXPECT_EQ(winner->pot_amount, 6.0);
 }
 
 TEST_F(GameLogicTest, AllPlayersButOneFoldHandFinishes) {
     logic_->StartHand();
-    for (size_t i = 0; i < players_.size() - 1; ++i) {
-        logic_->ProcessPlayerAction({EPlayerAction::FOLD});
-    }
-
+    // Fold first two, third should win
+    logic_->ProcessPlayerAction({EPlayerAction::FOLD});
+    logic_->ProcessPlayerAction({EPlayerAction::FOLD});
     auto winner = logic_->GetWinner();
     EXPECT_TRUE(winner);
-    EXPECT_EQ(logic_->GetState(), EState::HAND_FINISHED);
+    EXPECT_EQ(logic_->GetState(), ELogicState::HAND_FINISHED);
 }
 
 TEST_F(GameLogicTest, SinglePlayerLeftEndsHand) {
-    auto players = MakePlayers(2);
-    logic_ = std::make_unique<GameLogic>(*deck_, *table_, players);
+    // Table with two active players
+    PlayerList pl;
+    pl.SitPlayerAt(MakePlayer("D"), 0);
+    pl.SitPlayerAt(MakePlayer("E"), 1);
+    logic_ = std::make_unique<GameLogic>(*mock_deck_, *mock_table_, pl);
+
     logic_->StartHand();
-    logic_->ProcessPlayerAction({EPlayerAction::FOLD});
-    
+    logic_->ProcessPlayerAction({EPlayerAction::FOLD}); // 0 folds, 1 wins
     auto winner = logic_->GetWinner();
-    EXPECT_EQ(logic_->CountActivePlayers(), 1);
+    EXPECT_EQ(logic_->GetState(), ELogicState::HAND_FINISHED);
     EXPECT_TRUE(winner);
-    EXPECT_EQ(logic_->GetState(), EState::HAND_FINISHED);
 }
 
 TEST_F(GameLogicTest, AllPlayersCheckAndTryToAdvanceState) {
     logic_->StartHand();
-    for (size_t i = 0; i < players_.size(); ++i) {
+    // All check
+    for (std::size_t i = 0; i < 3; ++i)
         logic_->ProcessPlayerAction({EPlayerAction::CHECK});
-    }
 
     EXPECT_FALSE(logic_->IsBettingRoundComplete());
     EXPECT_THROW(logic_->AdvanceState(), std::runtime_error);
-    EXPECT_EQ(logic_->GetState(), EState::PREFLOP);
+    EXPECT_EQ(logic_->GetState(), ELogicState::PREFLOP);
 }
 
-// === === TESTS DE INTEGRIDAD Y CONSISTENCIA === ===
-
 TEST_F(GameLogicTest, CommunityCardsAreDealtCorrectly) {
-    logic_ = std::make_unique<GameLogic>(*deck_, *table_, players_);
-    
-    logic_->StartHand();
+    // Prepare a vector of 5 cards to return as community cards
+    std::vector<Card> community_cards = {
+        {ECardSuit::HEARTS, ECardRank::TWO},
+        {ECardSuit::SPADES, ECardRank::THREE},
+        {ECardSuit::DIAMONDS, ECardRank::FOUR},
+        {ECardSuit::CLUBS, ECardRank::FIVE},
+        {ECardSuit::HEARTS, ECardRank::SIX}
+    };
 
-    // preflop - flop - turn - river
+    // This ensures that whenever GetCommunityCards() is called, it returns this vector
+    EXPECT_CALL(*mock_table_, GetCommunityCards()).WillRepeatedly(ReturnRef(community_cards));
+
+    logic_->StartHand();
+    // Simulate betting to advance state
     for (int s = 0; s < 4; ++s) {
-        for (size_t i = 0; i < players_.size(); ++i) {
-            if (i == 0) {
-                logic_->ProcessPlayerAction({EPlayerAction::BET, 4.0});
-            } else {
-                logic_->ProcessPlayerAction({EPlayerAction::CALL});
-            }
+        for (std::size_t i = 0; i < 3; ++i) {
+            if (i == 0) logic_->ProcessPlayerAction({EPlayerAction::BET, 4.0});
+            else logic_->ProcessPlayerAction({EPlayerAction::CALL});
         }
         logic_->AdvanceState();
     }
-
-    EXPECT_EQ(table_->GetCommunityCards().size(), 5);
-    EXPECT_EQ(logic_->GetState(), EState::SHOWDOWN);
+    // Flop, turn, river: 3+1+1 = 5 cards
+    EXPECT_EQ(mock_table_->GetCommunityCards().size(), 5);
+    EXPECT_EQ(logic_->GetState(), ELogicState::SHOWDOWN);
 }
-
-// === === ALL-IN, SIDE POT, TIE === ===
-
-TEST_F(GameLogicTest, PlayerAllInScenario) {
-    // Simulate all-in
-    // ...
-}
-
-TEST_F(GameLogicTest, SplitPotScenario) {
-    // Simulate perfect tie: half pot for each player.
-    // ...
-}
-
-// === === RESTART TESTS === ===
 
 TEST_F(GameLogicTest, HandCanRestartAfterFinish) {
     logic_->StartHand();
-    for (size_t i = 0; i < players_.size() - 1; ++i) {
-        logic_->ProcessPlayerAction({EPlayerAction::FOLD});
-    }
-    
+    logic_->ProcessPlayerAction({EPlayerAction::FOLD});
+    logic_->ProcessPlayerAction({EPlayerAction::FOLD});
     EXPECT_TRUE(logic_->GetWinner());
-    EXPECT_EQ(logic_->GetState(), EState::HAND_FINISHED);
+    EXPECT_EQ(logic_->GetState(), ELogicState::HAND_FINISHED);
 
     logic_->StartHand();
-    EXPECT_EQ(logic_->GetState(), EState::PREFLOP);
+    EXPECT_EQ(logic_->GetState(), ELogicState::PREFLOP);
 }

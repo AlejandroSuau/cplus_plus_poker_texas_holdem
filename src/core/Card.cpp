@@ -6,16 +6,16 @@
 #include <sstream>
 
 Card::Card() noexcept 
-    : suit_(ESuit::SPADES), rank_(ERank::ACE) {}
+    : suit_(ECardSuit::SPADES), rank_(ECardRank::ACE) {}
 
-Card::Card(ESuit suit, ERank rank) noexcept 
+Card::Card(ECardSuit suit, ECardRank rank) noexcept 
     : suit_(suit), rank_(rank) {}
 
-ESuit Card::GetSuit() const noexcept {
+ECardSuit Card::GetSuit() const noexcept {
     return suit_;
 }
 
-ERank Card::GetRank() const noexcept {
+ECardRank Card::GetRank() const noexcept {
     return rank_;
 }
 
