@@ -3,11 +3,11 @@
 # Library for core game logic
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 list(REMOVE_ITEM SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
+file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/include/*.hpp)
 
 add_library(pokerlib ${SOURCE_FILES} ${HEADER_FILES})
 
-target_include_directories(pokerlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(pokerlib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # Executable for main game (with Raylib)
 add_executable(poker_main main.cpp)
