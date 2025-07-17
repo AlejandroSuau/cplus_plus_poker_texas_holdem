@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/ITable.hpp"
+#include "table/ITable.hpp"
 #include "core/Types.hpp"
 #include "core/Card.hpp"
 

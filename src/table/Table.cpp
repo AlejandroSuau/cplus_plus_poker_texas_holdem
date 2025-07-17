@@ -1,4 +1,4 @@
-#include "core/Table.hpp"
+#include "table/Table.hpp"
 
 Table::Table(Coins_t blind_small, Coins_t blind_big) noexcept
     : pot_(0.0), blind_small_(blind_small), blind_big_(blind_big) {}

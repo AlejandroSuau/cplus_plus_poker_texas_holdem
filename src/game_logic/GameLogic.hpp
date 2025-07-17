@@ -4,7 +4,7 @@
 
 #include "core/Types.hpp"
 #include "core/IDeck.hpp"
-#include "core/ITable.hpp"
+#include "table/ITable.hpp"
 #include "core/Player.hpp"
 
 #include <optional>

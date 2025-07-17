@@ -7,8 +7,8 @@
 #include "core/Types.hpp"
 #include "core/Card.hpp"
 #include "core/Player.hpp"
-#include "core/ITable.hpp"
-#include "core/Table.hpp"
+#include "table/ITable.hpp"
+#include "table/Table.hpp"
 
 #include "game_logic/GameLogic.hpp"
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/ITable.hpp"
+#include "table/ITable.hpp"
 #include "core/Types.hpp"
-#include "core/PlayerList.hpp"
+#include "table/PlayerList.hpp"
 #include "core/Deck.hpp"
 
 // TODO: ALL-IN + Side pots
