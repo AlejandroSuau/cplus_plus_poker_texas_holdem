@@ -3,9 +3,9 @@
 #include <phevaluator/phevaluator.h>
 
 #include "core/Types.hpp"
-#include "core/Deck.hpp"
+#include "core/IDeck.hpp"
+#include "core/ITable.hpp"
 #include "core/Player.hpp"
-#include "core/Table.hpp"
 
 #include <optional>
 
@@ -19,58 +19,67 @@ enum class EState {
     HAND_FINISHED
 };
 
-// TODO: Action + Bet on struct.
-
 using Players = std::vector<Player>;
+
+struct Action {
+    EPlayerAction action;
+    Coins_t amount {0.0};
+};
+
+struct Winner {
+    std::size_t player_index;
+    phevaluator::Rank rank;
+    Coins_t pot_amount;
+};
 
 class GameLogic {
 public:
-    struct Winner {
-        Player* player;
-        phevaluator::Rank rank_;
-        Coins_t pot_amount_;
-    };
-
-    GameLogic(Deck& deck, Table& table, Players& players);
+    GameLogic(IDeck& deck, ITable& table, Players& players);
 
     void StartHand();
-    void CurrentPlayerMakesAction(EPlayerAction action, Coins_t bet = 0);
-    void AdvanceState(); // So we can capture the last info in the state before moving to the next.
-
-    EState GetState() const;
-    std::size_t GetCurrentPlayerIndex() const;
-    std::size_t GetDealerIndex() const;
-    Coins_t GetHighestBet() const;
+    void ProcessPlayerAction(const Action& action);
+    void AdvanceState();
     bool IsBettingRoundComplete() const;
 
-    std::optional<Winner> GetWinner() const;
+    EState GetState() const noexcept;
+    std::optional<Winner> GetWinner() const noexcept;
+    std::size_t GetDealerIndex() const noexcept;
+    std::size_t GetCurrentPlayerIndex() const noexcept;
+    const Players& GetPlayers() const noexcept;
+
+    std::size_t FindOnlyActivePlayer() const;
+    std::size_t CountActivePlayers() const;
 
 private:
-    Deck& deck_;
-    Table& table_;
+    IDeck& deck_;
+    ITable& table_;
     Players& players_;
 
     EState state_ {EState::NONE};
-    bool state_did_finish_ {false};
-    std::size_t dealer_index_;
-    std::size_t index_blind_small_ {0};
-    std::size_t index_blind_big_ {0};
-    std::size_t current_player_index_ {0};
-    Coins_t highest_bet_ {0.0};
-    Coins_t last_raise_amount_ {0.0};
+    bool round_finished_{false};
+
+    std::size_t dealer_index_{0};
+    std::size_t index_blind_small_{0};
+    std::size_t index_blind_big_{0};
+    std::size_t current_player_index_{0};
+
+    Coins_t highest_bet_{0.0};
+    Coins_t last_raise_{0.0};
+
     std::optional<Winner> winner_{std::nullopt};
     
-    std::size_t GetNextPlayerToIndex(std::size_t index) const;
-    std::size_t GetNextNonFoldPlayerToIndex(std::size_t index) const; // Non-fold one.
+    std::size_t NextPlayerIndex(std::size_t index) const;
+    std::size_t NextActivePlayerIndex(std::size_t index) const;
 
     void AdvanceTurn();
+    void DealFlop();
+    void DealTurn();
+    void DealRiver();
+    void HandleShowdown();
+    void FinishHand();
 
-    void EnteringStateFlop();
-    void EnteringStateTurn();
-    void EnteringStateRiver();
-    void EnteringStateShowdown();
-    void EnteringStateHandFinished();
-
-    std::size_t BestRankFromPlayerTableCards() const;
-    void PrintAllPlayersRanks() const;
+    void ResetBets();
+    
+    std::size_t FindBestPlayer() const;
+    void PayToPot(Player& player, Coins_t amount);
 };

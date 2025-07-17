@@ -17,6 +17,14 @@ const PlayerHand& Player::GetHand() const noexcept {
     return hand_;
 }
 
+Coins_t Player::GetAlreadyPaid() const noexcept {
+    return already_paid_;
+}
+
+void Player::SetAlreadyPaid(Coins_t amount) noexcept {
+    already_paid_ = amount;
+}
+
 Coins_t Player::GetLastBet() const noexcept {
     return last_bet_;
 }
@@ -29,7 +37,7 @@ void Player::SetCoins(Coins_t coins) noexcept {
     coins_ = coins;
 }
 
-Coins_t Player::GetCoins() noexcept {
+Coins_t Player::GetCoins() const noexcept {
     return coins_;
 }
 

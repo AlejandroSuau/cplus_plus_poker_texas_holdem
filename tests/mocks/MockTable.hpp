@@ -2,8 +2,11 @@
 
 #include "core/ITable.hpp"
 #include "core/Types.hpp"
+#include "core/Card.hpp"
 
 #include <gmock/gmock.h>
+
+#include <vector>
 
 class MockTable : public ITable {
 public:
@@ -17,5 +20,5 @@ public:
     MOCK_METHOD(Coins_t, GetPot, (), (const, noexcept, override));
 
     MOCK_METHOD(void, AddCommunityCard, (Card card), (noexcept, override));
-    MOCK_METHOD(const CommunityCards_t&, GetCommunityCards, (), (const, noexcept, override));
+    MOCK_METHOD(const ITable::CommunityCards_t&, GetCommunityCards, (), (const, noexcept, override));
 };
