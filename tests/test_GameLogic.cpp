@@ -35,9 +35,10 @@ Players MakePlayers(std::size_t n, Coins_t chips = 100.0) {
 
 class GameLogicTest : public ::testing::Test {
 protected:
-    // NiceMock for allowing not to EXPECT_CALL of all process functions from Dekc,
+    // NiceMock for allowing not to EXPECT_CALL of all process functions from Deck.
     std::unique_ptr<testing::NiceMock<MockDeck>> mock_deck_;
     std::unique_ptr<testing::NiceMock<MockTable>> mock_table_;
+    std::unique_ptr<IRandomProvider> rng_;
     std::unique_ptr<IDeck> deck_;
     std::unique_ptr<ITable> table_;
     Players players_;
@@ -46,7 +47,8 @@ protected:
     void SetUp() override {
         mock_deck_ = std::make_unique<testing::NiceMock<MockDeck>>();
         mock_table_ = std::make_unique<testing::NiceMock<MockTable>>();
-        deck_ = std::make_unique<Deck>(kCardDeck);
+        rng_ = std::make_unique<StdRandomProvider>();
+        deck_ = std::make_unique<Deck>(kCardDeck, *rng_);
         table_ = std::make_unique<Table>(2.0, 4.0);
         players_ = MakePlayers(6);
         logic_ = std::make_unique<GameLogic>(*mock_deck_, *mock_table_, players_);

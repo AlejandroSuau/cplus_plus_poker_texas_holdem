@@ -3,32 +3,90 @@
 #include "core/Card.hpp"
 #include "core/Deck.hpp"
 
-TEST(DeckTest, Draw) {
-    Deck::DeckCards_t deck_cards {
-        {ESuit::HEARTS, ERank::TWO},
-        {ESuit::HEARTS, ERank::THREE},
-        {ESuit::HEARTS, ERank::FOUR},
-        {ESuit::HEARTS, ERank::ACE}
-    };
-    Deck deck(deck_cards);
+#include "utils/random/IRandomProvider.hpp"
 
-    EXPECT_EQ(deck.Draw(), deck_cards[0]);
+// Mock for provider: do shuffle nothing
+class MockRandomProvider : public IRandomProvider {
+public:
+    void Shuffle(std::vector<Card>& cards) override {}
+};
+
+// Mock for provider: reverse cards.
+class ReverseMockRandomProvider : public IRandomProvider {
+public:
+    void Shuffle(std::vector<Card>& cards) override {
+        std::reverse(cards.begin(), cards.end());
+    }
+};
+
+TEST(DeckTest, DrawsSequentiallyWithoutShuffle) {
+    std::vector<Card> cards = {
+        {ESuit::HEARTS, ERank::TWO},
+        {ESuit::SPADES, ERank::THREE}
+    };
+    MockRandomProvider mock_rng;
+    Deck deck(cards, mock_rng);
+
+    auto c1 = deck.Draw();
+    ASSERT_TRUE(c1.has_value());
+    EXPECT_EQ(c1.value(), cards[0]);
+
+    auto c2 = deck.Draw();
+    ASSERT_TRUE(c2.has_value());
+    EXPECT_EQ(c2.value(), cards[1]);
+
+    auto c3 = deck.Draw();
+    EXPECT_FALSE(c3.has_value());
 }
 
-TEST(DeckTest, Shuffle) {
-    Deck::DeckCards_t deck_cards {
+TEST(DeckTest, ShuffleCallsRandomProvider) {
+    std::vector<Card> cards = {
+        {ESuit::HEARTS, ERank::TWO},
+        {ESuit::SPADES, ERank::THREE}
+    };
+    ReverseMockRandomProvider reverse_rng;
+
+    Deck deck(cards, reverse_rng);
+    deck.Shuffle();
+
+    auto c1 = deck.Draw();
+    ASSERT_TRUE(c1.has_value());
+    EXPECT_EQ(c1.value(), cards[1]);
+
+    auto c2 = deck.Draw();
+    ASSERT_TRUE(c2.has_value());
+    EXPECT_EQ(c2.value(), cards[0]);
+}
+
+TEST(DeckTest, GetCardsReflectsCurrentDeckState) {
+    std::vector<Card> cards = {
+        {ESuit::HEARTS, ERank::TWO},
+        {ESuit::SPADES, ERank::THREE}
+    };
+    MockRandomProvider mock_rng;
+    Deck deck(cards, mock_rng);
+
+    EXPECT_EQ(deck.GetCards().size(), 2);
+    deck.Draw();
+    EXPECT_EQ(deck.GetCards().size(), 2);
+}
+
+TEST(DeckTest, ShuffleAfterPartialDraw) {
+    std::vector<Card> cards = {
         {ESuit::HEARTS, ERank::TWO},
         {ESuit::SPADES, ERank::THREE},
-        {ESuit::DIAMONDS, ERank::FOUR},
-        {ESuit::DIAMONDS, ERank::FIVE},
-        {ESuit::DIAMONDS, ERank::SIX},
-        {ESuit::HEARTS, ERank::ACE}
+        {ESuit::DIAMONDS, ERank::FOUR}
     };
-    Deck deck(deck_cards);
+    MockRandomProvider mock_rng;
+    Deck deck(cards, mock_rng);
 
-    EXPECT_EQ(deck.GetCards(), deck_cards);
-
+    deck.Draw();
     deck.Shuffle();
-    
-    EXPECT_NE(deck.GetCards(), deck_cards);
+    auto c1 = deck.Draw();
+    auto c2 = deck.Draw();
+    auto c3 = deck.Draw();
+    EXPECT_TRUE(c1.has_value());
+    EXPECT_TRUE(c2.has_value());
+    EXPECT_TRUE(c3.has_value());
+    EXPECT_FALSE(deck.Draw().has_value());
 }

@@ -4,8 +4,11 @@
 
 #include "core/Types.hpp"
 #include "core/IDeck.hpp"
-#include "table/ITable.hpp"
 #include "core/Player.hpp"
+
+#include "table/ITable.hpp"
+
+#include "utils/random/IRandomProvider.hpp"
 
 #include <optional>
 

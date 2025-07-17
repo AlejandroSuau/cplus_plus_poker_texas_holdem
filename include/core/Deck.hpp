@@ -2,15 +2,15 @@
 
 #include "core/IDeck.hpp"
 
+#include "utils/random/StdRandomProvider.hpp"
+
 #include <vector>
-// TODO: Array or Vector? Which is performance better and why? And for sorting?
-//       Shared ptr? Objects? Why? Copies are better? At least theye're for testing.
 #include <optional>
 
 class Deck : public IDeck {
 public:
     using DeckCards_t = std::vector<Card>;
-    Deck(DeckCards_t cards) noexcept;
+    Deck(DeckCards_t cards, IRandomProvider& rng) noexcept;
 
     void Shuffle() noexcept override;
     [[nodiscard]] std::optional<Card> Draw() noexcept override;
@@ -18,5 +18,6 @@ public:
 
 private:
     DeckCards_t cards_;
+    IRandomProvider& rng_;
     std::size_t next_card_index_;
 };
