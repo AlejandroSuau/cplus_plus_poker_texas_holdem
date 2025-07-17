@@ -82,4 +82,5 @@ private:
     
     std::size_t FindBestPlayer() const;
     void PayToPot(Player& player, Coins_t amount);
+    void DrawCommunityCards(std::size_t quantity = 1);
 };

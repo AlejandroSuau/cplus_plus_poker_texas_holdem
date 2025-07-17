@@ -9,7 +9,7 @@ public:
     using Cards_t = std::array<Card, 2>;
     PlayerHand() noexcept;
 
-    void AddCard(Card card) noexcept;
+    bool AddCard(Card card) noexcept;
     void Clear() noexcept;
     const Cards_t& GetCards() const noexcept;
     bool IsEmpty() const noexcept;

@@ -31,7 +31,11 @@ void GameLogic::StartHand() {
         p.SetLastBet(0.0);
         p.SetAlreadyPaid(0.0);
         for (std::size_t i = 0; i < 2; ++i) {
-            hand.AddCard(deck_.Draw());
+            auto maybe_card = deck_.Draw();
+            if (!maybe_card) {
+                throw std::runtime_error("No available draw cards for players");
+            }
+            hand.AddCard(*maybe_card);
         }
     }
 
@@ -151,24 +155,21 @@ std::size_t GameLogic::NextActivePlayerIndex(std::size_t index) const {
 }
 
 void GameLogic::DealFlop() {
-    ResetBets();
     state_ = EState::FLOP;
+    ResetBets();
+    DrawCommunityCards(3);
     current_player_index_ = index_blind_big_;
     while (players_[current_player_index_].IsFold()) {
         current_player_index_ = NextPlayerIndex(current_player_index_);
-    }
-
-    for (std::size_t i = 0; i < 3; ++i) {
-        table_.AddCommunityCard(deck_.Draw());
     }
 
     round_finished_ = false;
 }
 
 void GameLogic::DealTurn() {
-    ResetBets();
     state_ = EState::TURN;
-    table_.AddCommunityCard(deck_.Draw());
+    ResetBets();
+    DrawCommunityCards(1);
     current_player_index_ = index_blind_big_;
     while (players_[current_player_index_].IsFold()) {
         current_player_index_ = NextPlayerIndex(current_player_index_);
@@ -178,14 +179,24 @@ void GameLogic::DealTurn() {
 }
 
 void GameLogic::DealRiver() {
-    ResetBets();
     state_ = EState::RIVER;
-    table_.AddCommunityCard(deck_.Draw());
+    ResetBets();
+    DrawCommunityCards(1);
     current_player_index_ = index_blind_small_;
     while (players_[current_player_index_].IsFold())
         current_player_index_ = NextPlayerIndex(current_player_index_);
 
     round_finished_ = false;
+}
+
+void GameLogic::DrawCommunityCards(std::size_t quantity) {
+    for (std::size_t i = 0; i < quantity; ++i) {
+        auto maybe_card = deck_.Draw();
+        if (!maybe_card) {
+            throw std::runtime_error("No available draw cards for community");
+        }
+        table_.AddCommunityCard(*maybe_card);
+    }
 }
 
 void GameLogic::HandleShowdown() {

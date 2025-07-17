@@ -5,13 +5,11 @@
 PlayerHand::PlayerHand() noexcept
     : count_(0) {}
 
-void PlayerHand::AddCard(Card card) noexcept {
-    if (count_ == cards_.size()) {
-        assert(false && "Trying to add a card in a full hand");
-        return;
-    }
+bool PlayerHand::AddCard(Card card) noexcept {
+    if (IsFull()) return false;
 
     cards_[count_++] = card;
+    return true;
 }
 
 void PlayerHand::Clear() noexcept {

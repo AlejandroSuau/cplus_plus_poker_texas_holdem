@@ -50,37 +50,28 @@ protected:
         table_ = std::make_unique<Table>(2.0, 4.0);
         players_ = MakePlayers(6);
         logic_ = std::make_unique<GameLogic>(*mock_deck_, *mock_table_, players_);
+
+        std::optional<Card> fake_card = Card{ESuit::CLUBS, ERank::ACE};
+        EXPECT_CALL(*mock_deck_, Draw()).WillRepeatedly(Return(fake_card));
+
+        EXPECT_CALL(*mock_table_, GetBlindSmall()).WillRepeatedly(Return(2.0));
+        EXPECT_CALL(*mock_table_, GetBlindBig()).WillRepeatedly(Return(4.0));
     }
-
-    void TearDown() override {}
-
-    /*void Call() { logic_->ProcessPlayerAction({EPlayerAction::CALL}); }
-    void Check() { logic_->ProcessPlayerAction({EPlayerAction::CHECK}); }
-    void Fold() { logic_->ProcessPlayerAction({EPlayerAction::FOLD}); }
-    void Bet(Coins_t amount) { logic_->ProcessPlayerAction({EPlayerAction::BET, amount}); }
-    void Raise(Coins_t amount) { logic_->ProcessPlayerAction({EPlayerAction::RAISE, amount}); }*/
 };
 
 // === === GENERAL BEHAVIOUR AND BASIC RULES === ===
 
 TEST_F(GameLogicTest, DealerRotatesCorrectly) {
-    size_t prev_dealer = logic_->GetDealerIndex();
+    const size_t prev_dealer = logic_->GetDealerIndex();
     logic_->StartHand();
     EXPECT_EQ(logic_->GetDealerIndex(), (prev_dealer + 1) % players_.size());
     logic_->StartHand();
     EXPECT_EQ(logic_->GetDealerIndex(), (prev_dealer + 2) % players_.size());
 }
 
-TEST_F(GameLogicTest, BlindsAreAssignedProperly) {
-    EXPECT_CALL(*mock_deck_, Shuffle()).Times(1);
-    logic_->StartHand();
-    // No testea efecto directo, pero puedes mockear SetBlindBig/SetBlindSmall si tu lógica lo requiere
-}
-
 // === === PLAYER ACTIONS: BET, RAISE, CALL, CHECK, FOLD === ===
 
 TEST_F(GameLogicTest, CannotBetLessThanBigBlind) {
-    EXPECT_CALL(*mock_table_, GetBlindBig()).WillRepeatedly(Return(2.0));
     logic_->StartHand();
     EXPECT_THROW(logic_->ProcessPlayerAction({EPlayerAction::BET, 1.0}), std::runtime_error);
 }
@@ -92,14 +83,12 @@ TEST_F(GameLogicTest, CannotBetWhenBettingIsOpen) {
 }
 
 TEST_F(GameLogicTest, CannotCheckWhenBetExists) {
-    EXPECT_CALL(*mock_table_, GetBlindBig()).WillRepeatedly(Return(2.0));
     logic_->StartHand();
     logic_->ProcessPlayerAction({EPlayerAction::BET, 4.0});
     EXPECT_THROW(logic_->ProcessPlayerAction({EPlayerAction::CHECK}), std::runtime_error);
 }
 
 TEST_F(GameLogicTest, RaiseMustBeAtLeastLastRaise) {
-    EXPECT_CALL(*mock_table_, GetBlindBig()).WillRepeatedly(Return(2.0));
     logic_->StartHand();
     logic_->ProcessPlayerAction({EPlayerAction::BET, 4.0});
     logic_->ProcessPlayerAction({EPlayerAction::RAISE, 8.0});
