@@ -27,7 +27,7 @@ void Game::Draw() {
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
-    DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+    DrawText("... We're still working on Poker graphics and UI ...", 50, 200, 20, LIGHTGRAY);
 
     EndDrawing();
 }
