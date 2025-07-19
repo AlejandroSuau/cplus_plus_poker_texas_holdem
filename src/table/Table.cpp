@@ -1,7 +1,9 @@
 #include "table/Table.hpp"
 
 Table::Table(Coins_t blind_small, Coins_t blind_big) noexcept
-    : pot_(0.0), blind_small_(blind_small), blind_big_(blind_big) {}
+    : pot_(0.0), blind_small_(blind_small), blind_big_(blind_big) {
+    pots_.emplace_back();
+}
 
 void Table::SetBlindSmall(Coins_t cost) noexcept {
     blind_small_ = cost;
@@ -51,6 +53,10 @@ void Table::ResetPots() {
 void Table::AddPot() {
     pots_.emplace_back();
     ++current_pot_;
+}
+
+void Table::AddPlayerToPot(std::size_t player_idx) {
+    pots_[current_pot_].players.push_back(player_idx);
 }
 
 const ITable::Pots_t& Table::GetPots() const noexcept {

@@ -24,9 +24,10 @@ public:
      void AddCommunityCard(Card card) noexcept override;
     [[nodiscard]] const CommunityCards_t& GetCommunityCards() const noexcept override;
 
-    void AddPot(); // override
-    void ResetPots(); // override
-    [[nodiscard]] const Pots_t& GetPots() const noexcept; // override
+    void AddPlayerToPot(std::size_t player_idx) override;
+    void AddPot() override;
+    void ResetPots() override;
+    [[nodiscard]] const Pots_t& GetPots() const noexcept override;
 
 private:
     Coins_t pot_{0.0};

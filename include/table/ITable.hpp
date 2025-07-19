@@ -29,4 +29,9 @@ public:
 
     virtual void AddCommunityCard(Card card) noexcept = 0;
     [[nodiscard]] virtual const CommunityCards_t& GetCommunityCards() const noexcept = 0;
+
+    virtual void AddPlayerToPot(std::size_t player_idx) = 0;
+    virtual void AddPot() = 0;
+    virtual void ResetPots() = 0;
+    [[nodiscard]] virtual const Pots_t& GetPots() const noexcept = 0;
 };
