@@ -5,9 +5,16 @@
 
 #include <vector>
 
+class Pot {
+public:
+    Coins_t amount{0.0};
+    std::vector<std::size_t> players;
+};
+
 class ITable {
 public:
     using CommunityCards_t = std::vector<Card>;
+    using Pots_t = std::vector<Pot>;
 
     virtual ~ITable() = default;
 

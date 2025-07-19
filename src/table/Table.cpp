@@ -19,6 +19,7 @@ Coins_t Table::CollectPot() noexcept {
 
 void Table::IncreasePot(Coins_t value) noexcept {
     pot_ += value;
+    pots_[current_pot_].amount += value;
 }
 
 void Table::AddCommunityCard(Card card) noexcept {
@@ -37,6 +38,21 @@ Coins_t Table::GetBlindBig() const noexcept {
     return blind_big_;
 }
 
-const std::vector<Card>& Table::GetCommunityCards() const noexcept {
+const ITable::CommunityCards_t& Table::GetCommunityCards() const noexcept {
     return community_cards_;
+}
+
+void Table::ResetPots() {
+    pots_.clear();
+    pots_.emplace_back();
+    current_pot_ = 0;
+}
+
+void Table::AddPot() {
+    pots_.emplace_back();
+    ++current_pot_;
+}
+
+const ITable::Pots_t& Table::GetPots() const noexcept {
+    return pots_;
 }
