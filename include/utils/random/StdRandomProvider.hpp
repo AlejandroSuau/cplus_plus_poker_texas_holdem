@@ -1,3 +1,5 @@
+#pragma once
+
 #include "utils/random/IRandomProvider.hpp"
 
 #include <random>
