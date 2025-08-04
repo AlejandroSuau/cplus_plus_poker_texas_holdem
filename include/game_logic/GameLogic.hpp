@@ -6,7 +6,6 @@
 #include "core/IDeck.hpp"
 #include "core/Player.hpp"
 
-
 #include "table/PlayerList.hpp"
 #include "table/PlayerSession.hpp"
 #include "table/ITable.hpp"
@@ -42,7 +41,6 @@ public:
     bool IsBettingRoundComplete() const;
 
     ELogicState GetState() const noexcept;
-    std::optional<Winner> GetWinner() const noexcept;
     std::size_t GetDealerIndex() const noexcept;
     std::size_t GetCurrentPlayerIndex() const noexcept;
 
@@ -53,6 +51,7 @@ private:
 
     ELogicState state_ {ELogicState::NONE};
     bool round_finished_{false};
+    bool did_someone_bet_{false};
 
     std::size_t dealer_index_{0};
     std::size_t index_blind_small_{0};
@@ -61,8 +60,9 @@ private:
 
     Coins_t highest_bet_{0.0};
     Coins_t last_raise_{0.0};
-
-    std::optional<Winner> winner_{std::nullopt};
+    
+    void PayToPot(std::size_t player_idx, Coins_t amount);
+    void ComputePotsAmount();
 
     void AdvanceTurn();
     void DealFlop();
@@ -72,8 +72,6 @@ private:
     void FinishHand();
 
     void ResetBets();
-    
-    std::size_t FindBestPlayer() const;
-    void PayToPot(PlayerList::Seat& seat, Coins_t amount);
     void DrawCommunityCards(std::size_t quantity = 1);
+    void ComputePlayersRank();
 };

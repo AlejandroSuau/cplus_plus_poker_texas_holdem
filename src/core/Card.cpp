@@ -24,7 +24,7 @@ bool Card::operator==(const Card& other) const noexcept {
             GetRank() == other.GetRank());
 }
 
-std::string Card::ToString() const {
+std::string Card::ToString() const noexcept {
     std::ostringstream oss;
     oss << "Card {"
         << EnumString::ToString(rank_) << "-"

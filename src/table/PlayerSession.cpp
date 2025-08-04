@@ -6,21 +6,31 @@ PlayerSession::PlayerSession() noexcept {
 }
 
 void PlayerSession::NewHand() noexcept {
-    count_ = 0;
+    cards_count_ = 0;
     is_fold_ = false;
+    is_all_in_ = false;
     last_bet_ = 0.0;
-    already_paid_ = 0.0;
+    rank_ = 0;
 }
 
+void PlayerSession::SetRank(phevaluator::Rank rank) noexcept {
+    rank_ = rank;
+}
+
+phevaluator::Rank PlayerSession::GetRank() const noexcept {
+    return rank_;
+}
+
+
 bool PlayerSession::AddCard(const Card& card) noexcept {
-    if (count_ == hand_.size()) return false;
+    if (cards_count_ == hand_.size()) return false;
     
-    hand_[count_++] = card;
+    hand_[cards_count_++] = card;
     return true;
 }
 
 void PlayerSession::ClearHand() noexcept {
-    count_ = 0;
+    cards_count_ = 0;
 }
 
 const PlayerSession::Hand_t& PlayerSession::GetHand() const noexcept {
@@ -43,10 +53,9 @@ void PlayerSession::SetLastBet(Coins_t bet) noexcept {
     last_bet_ = bet;
 }
 
-Coins_t PlayerSession::GetAlreadyPaid() const noexcept {
-    return already_paid_;
+bool PlayerSession::IsAllIn() const noexcept {
+    return is_all_in_;
 }
-
-void PlayerSession::SetAlreadyPaid(Coins_t paid) noexcept {
-    already_paid_ = paid;
+void PlayerSession::SetAllIn(bool all_in) noexcept {
+    is_all_in_ = all_in;
 }

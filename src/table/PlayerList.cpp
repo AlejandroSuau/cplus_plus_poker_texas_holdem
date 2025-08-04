@@ -4,6 +4,10 @@
 #include <algorithm>
 
 PlayerList::PlayerList() {
+    ClearPlayers();
+}
+
+void PlayerList::ClearPlayers() {
     for (std::size_t i = 0; i < seats_.size(); ++i) {
         RemovePlayer(i);
     }
@@ -70,6 +74,24 @@ std::optional<std::size_t> PlayerList::NextEmptySeat(std::size_t from) const {
     return std::nullopt;
 }
 
+std::size_t PlayerList::CountAllInPlayers() const {
+    const auto active_seat_indices = GetActiveSeatIndices();
+    return std::count_if(active_seat_indices.begin(), active_seat_indices.end(), [&](const auto i) {
+        return (GetSession(i).IsAllIn());
+    });
+}
+
+Coins_t PlayerList::GetMinLastBet() const {
+    auto active_seat_indices  = GetActiveSeatIndices();
+    auto filtered_stacks = active_seat_indices 
+        | std::views::transform([&](const auto i) {
+            return GetPlayer(i).GetStack();
+        });
+
+    auto it = std::ranges::min_element(filtered_stacks);
+    return *it;
+}
+
 std::optional<std::size_t> PlayerList::LastOccupiedSeat() const {
     for (std::size_t i = kMaxPlayers; i > 0; --i) {
         std::size_t idx = i - 1;
@@ -92,8 +114,9 @@ std::optional<std::size_t> PlayerList::FindFirstActiveSeat() const {
 
 std::vector<std::size_t> PlayerList::GetOccupiedSeatIndices() const {
     std::vector<std::size_t> indices;
-    for (std::size_t i = 0; i < seats_.size(); ++i)
+    for (std::size_t i = 0; i < seats_.size(); ++i) {
         if (seats_[i].player) indices.push_back(i);
+    }
     return indices;
 }
 
@@ -116,12 +139,12 @@ std::size_t PlayerList::CountActiveSeats() const {
         [&](const auto& s) { return (s.player.has_value() && !s.session.IsFold()); });
 }
 
-std::optional<Player>& PlayerList::GetPlayer(std::size_t seat_index) {
-    return seats_[seat_index].player;
+Player& PlayerList::GetPlayer(std::size_t seat_index) {
+    return *seats_[seat_index].player;
 }
 
-const std::optional<Player>& PlayerList::GetPlayer(std::size_t seat_index) const {
-    return seats_[seat_index].player;
+const Player& PlayerList::GetPlayer(std::size_t seat_index) const {
+    return *seats_[seat_index].player;
 }
 
 PlayerSession& PlayerList::GetSession(std::size_t seat_index) {

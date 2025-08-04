@@ -24,6 +24,8 @@ public:
 
     PlayerList();
 
+    void ClearPlayers();
+
     std::optional<std::size_t> SitPlayer(Player&& player);
     bool SitPlayerAt(Player&& player, std::size_t seat_index);
     bool RemovePlayer(std::size_t seat_index);
@@ -39,9 +41,11 @@ public:
     std::size_t CountActiveSeats() const;
     std::vector<std::size_t> GetOccupiedSeatIndices() const;
     std::size_t CountOccupiedSeats() const;
+    std::size_t CountAllInPlayers() const;
+    Coins_t GetMinLastBet() const;
 
-    std::optional<Player>& GetPlayer(std::size_t seat_index);
-    const std::optional<Player>& GetPlayer(std::size_t seat_index) const;
+    Player& GetPlayer(std::size_t seat_index);
+    const Player& GetPlayer(std::size_t seat_index) const;
 
     PlayerSession& GetSession(std::size_t seat_index);
     const PlayerSession& GetSession(std::size_t seat_index) const;

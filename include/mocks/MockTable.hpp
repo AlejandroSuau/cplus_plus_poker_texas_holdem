@@ -22,8 +22,13 @@ public:
     MOCK_METHOD(void, AddCommunityCard, (Card card), (noexcept, override));
     MOCK_METHOD(const ITable::CommunityCards_t&, GetCommunityCards, (), (const, noexcept, override));
 
-    MOCK_METHOD(void, AddPlayerToPot, (std::size_t player_idx), (override));
-    MOCK_METHOD(void, AddPot, (), (override));
     MOCK_METHOD(void, ResetPots, (), (override));
     MOCK_METHOD(const ITable::Pots_t&, GetPots, (), (const, noexcept));
+
+    MOCK_METHOD(void, ExtractFromPot, (Coins_t amount), (override));
+    MOCK_METHOD(void, ContributeToPot, (std::size_t player_idx, Coins_t amount), (override));
+    MOCK_METHOD(void, RemovePlayerFromCurrentPot, (std::size_t player_idx), (override));
+    MOCK_METHOD(void, AddPlayerToPot, (std::size_t player_idx, std::size_t pot_idx), (override));
+    MOCK_METHOD(Pot&, AddPot, (Coins_t amount), (override));
+    MOCK_METHOD(Pot&, GetPot, (std::size_t pot_idx), (override));
 };

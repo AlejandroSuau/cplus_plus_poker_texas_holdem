@@ -71,6 +71,8 @@ README.md
 - To run tests:
   ```bash
   ctest --output-on-failure
+
+  ctest -R ProcessOnePotAllIn --output-on-failure
   ```
 
 ---

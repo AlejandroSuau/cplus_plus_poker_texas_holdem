@@ -8,7 +8,8 @@ enum class EPlayerAction {
     CHECK,
     CALL,
     BET,
-    RAISE
+    RAISE,
+    ALL_IN
 };
 
 enum class ECardSuit {

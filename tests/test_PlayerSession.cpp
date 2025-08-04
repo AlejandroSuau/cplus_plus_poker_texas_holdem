@@ -7,7 +7,6 @@ TEST(PlayerSessionTest, NewHandInitializesState) {
     // All state is reset
     EXPECT_FALSE(session.IsFold());
     EXPECT_DOUBLE_EQ(session.GetLastBet(), 0.0);
-    EXPECT_DOUBLE_EQ(session.GetAlreadyPaid(), 0.0);
     EXPECT_EQ(session.GetHand().size(), 2);
     EXPECT_EQ(session.GetHand()[0], Card{}); // default Card (assuming no value set)
     EXPECT_EQ(session.GetHand()[1], Card{}); // default Card
@@ -44,14 +43,9 @@ TEST(PlayerSessionTest, FoldAndBetLogic) {
     session.SetLastBet(25.5);
     EXPECT_DOUBLE_EQ(session.GetLastBet(), 25.5);
 
-    session.SetAlreadyPaid(13.3);
-    EXPECT_DOUBLE_EQ(session.GetAlreadyPaid(), 13.3);
-
     session.SetLastBet(0.0);
-    session.SetAlreadyPaid(0.0);
     session.SetFold(false);
 
     EXPECT_DOUBLE_EQ(session.GetLastBet(), 0.0);
-    EXPECT_DOUBLE_EQ(session.GetAlreadyPaid(), 0.0);
     EXPECT_FALSE(session.IsFold());
 }

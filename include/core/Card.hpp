@@ -14,7 +14,7 @@ public:
 
     bool operator==(const Card& other) const noexcept;
 
-    std::string ToString() const;
+    std::string ToString() const noexcept;
 
 private:
     ECardSuit suit_;

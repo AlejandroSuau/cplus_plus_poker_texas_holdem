@@ -2,7 +2,7 @@
 
 Table::Table(Coins_t blind_small, Coins_t blind_big) noexcept
     : pot_(0.0), blind_small_(blind_small), blind_big_(blind_big) {
-    pots_.emplace_back();
+    pots_.emplace_back(0.0);
 }
 
 void Table::SetBlindSmall(Coins_t cost) noexcept {
@@ -20,8 +20,16 @@ Coins_t Table::CollectPot() noexcept {
 }
 
 void Table::IncreasePot(Coins_t value) noexcept {
-    pot_ += value;
-    pots_[current_pot_].amount += value;
+
+}
+
+void Table::ExtractFromPot(Coins_t amount) {
+    pots_[current_pot_idx_].amount -= amount;
+}
+
+void Table::ContributeToPot(std::size_t player_idx, Coins_t amount) {
+    pots_[current_pot_idx_].amount += amount;
+    pots_[current_pot_idx_].players.insert(player_idx);
 }
 
 void Table::AddCommunityCard(Card card) noexcept {
@@ -46,19 +54,26 @@ const ITable::CommunityCards_t& Table::GetCommunityCards() const noexcept {
 
 void Table::ResetPots() {
     pots_.clear();
-    pots_.emplace_back();
-    current_pot_ = 0;
+    pots_.emplace_back(0.0);
 }
 
-void Table::AddPot() {
-    pots_.emplace_back();
-    ++current_pot_;
-}
-
-void Table::AddPlayerToPot(std::size_t player_idx) {
-    pots_[current_pot_].players.push_back(player_idx);
+void Table::RemovePlayerFromCurrentPot(std::size_t player_idx) {
+    pots_[current_pot_idx_].players.erase(player_idx);
 }
 
 const ITable::Pots_t& Table::GetPots() const noexcept {
     return pots_;
+}
+
+void Table::AddPlayerToPot(std::size_t player_idx, std::size_t pot_idx) {
+    pots_[pot_idx].players.insert(player_idx);
+}
+
+Pot& Table::AddPot(Coins_t amount) {
+    ++current_pot_idx_;
+    return pots_.emplace_back(amount);
+}
+
+Pot& Table::GetPot(std::size_t pot_idx) {
+    return pots_[pot_idx];
 }

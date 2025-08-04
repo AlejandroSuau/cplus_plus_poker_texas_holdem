@@ -3,12 +3,14 @@
 #include "core/Types.hpp"
 #include "core/Card.hpp"
 
-#include <vector>
+#include <unordered_set>
 
 class Pot {
 public:
+    Pot(Coins_t amt) : amount(amt) {}
+    
     Coins_t amount{0.0};
-    std::vector<std::size_t> players;
+    std::unordered_set<std::size_t> players {};
 };
 
 class ITable {
@@ -30,8 +32,13 @@ public:
     virtual void AddCommunityCard(Card card) noexcept = 0;
     [[nodiscard]] virtual const CommunityCards_t& GetCommunityCards() const noexcept = 0;
 
-    virtual void AddPlayerToPot(std::size_t player_idx) = 0;
-    virtual void AddPot() = 0;
     virtual void ResetPots() = 0;
     [[nodiscard]] virtual const Pots_t& GetPots() const noexcept = 0;
+
+    virtual void ExtractFromPot(Coins_t amount) = 0;
+    virtual void ContributeToPot(std::size_t player_idx, Coins_t amount) = 0;
+    virtual void RemovePlayerFromCurrentPot(std::size_t player_idx) = 0;
+    virtual void AddPlayerToPot(std::size_t player_idx, std::size_t pot_idx) = 0;
+    [[nodiscard]] virtual Pot& AddPot(Coins_t amount) = 0;
+    [[nodiscard]] virtual Pot& GetPot(std::size_t pot_idx) = 0;
 };
